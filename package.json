@@ -1,0 +1,11 @@
+{
+  "name": "mohan-finds",
+  "version": "1.0.0",
+  "description": "Compare ride prices across all major platforms",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "dependencies": {
+    "express": "^4.21.0"
+  }
+}
