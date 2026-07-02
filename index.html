@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Mohan Finds — Compare Ride Prices Across All Platforms</title>
+  <meta name="description" content="Find the cheapest ride across Uber, Ola, Rapido, BluSmart & Namma Yatri. Compare car and bike taxi prices instantly with best routes.">
+  <meta name="keywords" content="ride comparison, cheapest cab, uber vs ola, rapido price, bike taxi, cab booking comparison">
+  <meta name="theme-color" content="#070711">
+
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+
+  <!-- Leaflet CSS -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+    integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="">
+
+  <!-- App Styles -->
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+  <!-- ========== Header ========== -->
+  <header class="header" id="header">
+    <div class="header__brand">
+      <div class="header__logo" aria-hidden="true">M</div>
+      <div>
+        <h1 class="header__title">Mohan Finds</h1>
+        <p class="header__tagline">Compare prices across all ride platforms</p>
+      </div>
+    </div>
+    <div class="header__actions">
+      <button class="btn-icon" id="btn-theme" title="Toggle theme" aria-label="Toggle theme">🌙</button>
+    </div>
+  </header>
+
+  <!-- Surge Banner -->
+  <div class="surge-banner" id="surge-banner">
+    <span class="surge-banner__icon">⚡</span>
+    <span id="surge-banner-text">Surge pricing is active on some platforms right now</span>
+  </div>
+
+  <!-- ========== Main Layout ========== -->
+  <main class="main" id="main">
+
+    <!-- ===== Sidebar ===== -->
+    <aside class="sidebar" id="sidebar">
+
+      <!-- Search Panel -->
+      <section class="search-panel" id="search-panel">
+        <p class="search-panel__title">Plan your ride</p>
+
+        <div class="location-inputs" id="location-inputs">
+          <div class="location-connector" aria-hidden="true"></div>
+
+          <!-- Pickup Input -->
+          <div class="location-input-group" id="pickup-group">
+            <span class="location-dot location-dot--pickup" aria-hidden="true"></span>
+            <input
+              type="text"
+              class="location-input"
+              id="pickup-input"
+              placeholder="Enter pickup location"
+              autocomplete="off"
+              aria-label="Pickup location"
+            >
+            <div class="autocomplete-dropdown" id="pickup-dropdown" role="listbox"></div>
+          </div>
+
+          <!-- Swap Button -->
+          <button class="swap-btn" id="swap-btn" title="Swap locations" aria-label="Swap pickup and drop locations">⇅</button>
+
+          <!-- Drop Input -->
+          <div class="location-input-group" id="drop-group">
+            <span class="location-dot location-dot--drop" aria-hidden="true"></span>
+            <input
+              type="text"
+              class="location-input"
+              id="drop-input"
+              placeholder="Enter drop location"
+              autocomplete="off"
+              aria-label="Drop location"
+            >
+            <div class="autocomplete-dropdown" id="drop-dropdown" role="listbox"></div>
+          </div>
+        </div>
+
+        <!-- Action Buttons -->
+        <div class="action-buttons">
+          <button class="btn-action btn-action--primary" id="btn-search" aria-label="Compare prices">
+            <span>🔍</span> Compare Prices
+          </button>
+          <button class="btn-action btn-action--secondary" id="btn-locate" title="Use my current location" aria-label="Use my location">
+            <span>📍</span> My Location
+          </button>
+        </div>
+      </section>
+
+      <!-- Vehicle Type Tabs -->
+      <section class="vehicle-tabs" id="vehicle-tabs-section">
+        <p class="vehicle-tabs__label">Vehicle Type</p>
+        <div class="tabs-container" id="vehicle-tabs" role="tablist">
+          <button class="tab-btn active" data-type="all" role="tab" aria-selected="true" id="tab-all">
+            <span class="tab-btn__icon">🚕</span> All
+          </button>
+          <button class="tab-btn" data-type="bike" role="tab" aria-selected="false" id="tab-bike">
+            <span class="tab-btn__icon">🏍️</span> Bike
+          </button>
+          <button class="tab-btn" data-type="auto" role="tab" aria-selected="false" id="tab-auto">
+            <span class="tab-btn__icon">🛺</span> Auto
+          </button>
+          <button class="tab-btn" data-type="car" role="tab" aria-selected="false" id="tab-car">
+            <span class="tab-btn__icon">🚗</span> Car
+          </button>
+        </div>
+      </section>
+
+      <!-- Route Options -->
+      <section class="route-panel" id="route-panel">
+        <p class="route-panel__title">Route Options</p>
+        <div id="route-options-list"></div>
+      </section>
+
+      <!-- Price Results -->
+      <section class="results-panel" id="results-panel">
+        <div class="results-header">
+          <span class="results-header__title">Price Comparison</span>
+          <span class="results-header__count" id="results-count"></span>
+        </div>
+        <div id="ride-cards-container"></div>
+      </section>
+
+      <!-- Welcome State (shown when no results) -->
+      <div class="welcome-state" id="welcome-state">
+        <div class="welcome-state__icon">🗺️</div>
+        <p class="welcome-state__title">Find the cheapest ride</p>
+        <p class="welcome-state__text">Enter pickup & drop locations to compare prices across Uber, Ola, Rapido, BluSmart & Namma Yatri</p>
+      </div>
+
+    </aside>
+
+    <!-- ===== Map Area ===== -->
+    <section class="map-area" id="map-area">
+      <div id="map"></div>
+
+      <!-- Map Stats Overlay -->
+      <div class="map-overlay" id="map-overlay">
+        <div class="map-stat" id="stat-distance">
+          <div class="map-stat__label">Distance</div>
+          <div class="map-stat__value" id="stat-distance-value">—</div>
+        </div>
+        <div class="map-stat" id="stat-duration">
+          <div class="map-stat__label">Est. Time</div>
+          <div class="map-stat__value" id="stat-duration-value">—</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ===== Trip Summary Bar (below map) ===== -->
+    <section class="trip-summary" id="trip-summary">
+      <div class="trip-summary__item">
+        <span class="trip-summary__icon">📏</span>
+        <div>
+          <div class="trip-summary__label">Distance</div>
+          <div class="trip-summary__value" id="summary-distance">—</div>
+        </div>
+      </div>
+      <div class="trip-summary__item">
+        <span class="trip-summary__icon">⏱️</span>
+        <div>
+          <div class="trip-summary__label">Duration</div>
+          <div class="trip-summary__value" id="summary-duration">—</div>
+        </div>
+      </div>
+      <div class="trip-summary__item">
+        <span class="trip-summary__icon">💰</span>
+        <div>
+          <div class="trip-summary__label">Best Price</div>
+          <div class="trip-summary__value" id="summary-best-price">—</div>
+        </div>
+      </div>
+      <div class="trip-summary__savings" id="summary-savings">
+        <div class="trip-summary__savings-label">You Save</div>
+        <div class="trip-summary__savings-value" id="summary-savings-value">—</div>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- Loading Overlay -->
+  <div class="loading-overlay" id="loading-overlay">
+    <div class="loading-spinner"></div>
+    <p class="loading-text" id="loading-text">Comparing prices across platforms...</p>
+  </div>
+
+  <!-- Leaflet JS -->
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+    integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+
+  <!-- App Logic -->
+  <script src="app.js"></script>
+
+</body>
+</html>
